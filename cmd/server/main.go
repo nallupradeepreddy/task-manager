@@ -12,6 +12,14 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+
+	"github.com/nallupradeepreddy/task-manager/internal/adapters/api"
+	"github.com/nallupradeepreddy/task-manager/internal/adapters/repository"
+	"github.com/nallupradeepreddy/task-manager/internal/core/domain"
+	"github.com/nallupradeepreddy/task-manager/internal/core/service"
 )
 
 func main() {
@@ -37,6 +45,27 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
+
+	// Database connection using GORM
+	dbURL := viper.GetString("DATABASE_URL")
+	if dbURL == "" {
+		log.Fatal().Msg("DATABASE_URL not set in .env file")
+	}
+	gormDB, err := gorm.Open(postgres.Open(dbURL), &gorm.Config{})
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to connect to database with GORM")
+	}
+
+	// Auto-migrate User model
+	if err := gormDB.AutoMigrate(&domain.User{}); err != nil {
+		log.Fatal().Err(err).Msg("Failed to migrate database")
+	}
+
+	// Wire up repository, service, and handler
+	userRepo := repository.NewUserPostgresRepository(gormDB)
+	userService := service.NewUserService(userRepo)
+	userHandler := api.NewUserHandler(userService)
+	userHandler.RegisterRoutes(r)
 
 	// Example route
 	r.GET("/ping", func(c *gin.Context) {
