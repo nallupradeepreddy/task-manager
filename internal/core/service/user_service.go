@@ -5,11 +5,39 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/nallupradeepreddy/task-manager/internal/core/domain"
 	"github.com/nallupradeepreddy/task-manager/internal/core/ports"
+	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
 )
+
+// LoginUser authenticates a user and returns a JWT token if successful
+func (s *UserServiceImpl) LoginUser(email, password string) (string, error) {
+	user, err := s.repo.GetUserByEmail(email)
+	if err != nil || user == nil {
+		return "", errors.New("invalid email or password")
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+		return "", errors.New("invalid email or password")
+	}
+	secret := viper.GetString("JWT_SECRET")
+	if secret == "" {
+		return "", errors.New("JWT secret not configured")
+	}
+	claims := jwt.MapClaims{
+		"sub":   user.ID.String(),
+		"email": user.Email,
+		"exp":   time.Now().Add(time.Hour * 1).Unix(), // 1 hour expiry
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signed, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return "", err
+	}
+	return signed, nil
+}
 
 type UserServiceImpl struct {
 	repo ports.UserRepository

@@ -9,4 +9,5 @@ type UserRepository interface {
 
 type UserService interface {
 	RegisterUser(email, password string) (*domain.User, error)
+	LoginUser(email, password string) (string, error) // returns JWT token
 }

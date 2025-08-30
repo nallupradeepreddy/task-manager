@@ -73,6 +73,11 @@ func main() {
 		c.JSON(200, gin.H{"message": "pong"})
 	})
 
+	// Protected example route
+	r.GET("/protected", api.AuthMiddleware(), func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "You are authorized!"})
+	})
+
 	srv := &http.Server{
 		Addr:    addr,
 		Handler: r,
