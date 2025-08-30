@@ -29,6 +29,12 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
 			return
 		}
+		// Set user_id in context if present in claims
+		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+			if sub, ok := claims["sub"].(string); ok {
+				c.Set("user_id", sub)
+			}
+		}
 		c.Next()
 	}
 }

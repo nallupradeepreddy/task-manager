@@ -1,6 +1,6 @@
 
 run:
-	go run ./cmd/server/main.go
+	air
 
 test:
 	go test ./...

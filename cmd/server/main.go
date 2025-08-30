@@ -21,6 +21,20 @@ import (
 	"github.com/nallupradeepreddy/task-manager/internal/core/service"
 )
 
+func RegisterUserAPI(r *gin.Engine, db *gorm.DB) {
+	userRepo := repository.NewUserPostgresRepository(db)
+	userService := service.NewUserService(userRepo)
+	userHandler := api.NewUserHandler(userService)
+	userHandler.RegisterRoutes(r)
+}
+
+func RegisterTaskAPI(r *gin.Engine, db *gorm.DB, auth gin.HandlerFunc) {
+	taskRepo := repository.NewTaskPostgresRepository(db)
+	taskService := service.NewTaskService(taskRepo)
+	taskHandler := api.NewTaskHandler(taskService)
+	taskHandler.RegisterRoutes(r, auth)
+}
+
 func main() {
 
 	// Set up Viper to read from .env file
@@ -55,11 +69,9 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to connect to database with GORM")
 	}
 
-	// Wire up repository, service, and handler
-	userRepo := repository.NewUserPostgresRepository(gormDB)
-	userService := service.NewUserService(userRepo)
-	userHandler := api.NewUserHandler(userService)
-	userHandler.RegisterRoutes(r)
+	// Register APIs
+	RegisterUserAPI(r, gormDB)
+	RegisterTaskAPI(r, gormDB, api.AuthMiddleware())
 
 	// Example route
 	r.GET("/ping", func(c *gin.Context) {
