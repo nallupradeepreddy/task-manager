@@ -18,7 +18,6 @@ import (
 
 	"github.com/nallupradeepreddy/task-manager/internal/adapters/api"
 	"github.com/nallupradeepreddy/task-manager/internal/adapters/repository"
-	"github.com/nallupradeepreddy/task-manager/internal/core/domain"
 	"github.com/nallupradeepreddy/task-manager/internal/core/service"
 )
 
@@ -54,11 +53,6 @@ func main() {
 	gormDB, err := gorm.Open(postgres.Open(dbURL), &gorm.Config{})
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to connect to database with GORM")
-	}
-
-	// Auto-migrate User model
-	if err := gormDB.AutoMigrate(&domain.User{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to migrate database")
 	}
 
 	// Wire up repository, service, and handler

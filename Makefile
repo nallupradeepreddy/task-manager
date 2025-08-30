@@ -1,6 +1,3 @@
-# Makefile for Go Task Manager Project
-
-.PHONY: run test deps tidy lint fmt clean build logs
 
 run:
 	go run ./cmd/server/main.go
@@ -29,4 +26,8 @@ build:
 logs:
 	echo "No logs command for local dev."
 
-# Add more commands as needed
+dotenv-migrate-up:
+	set -a; source .env; set +a; migrate -path ./migrations -database "$$DATABASE_URL" up
+
+dotenv-migrate-down:
+	set -a; source .env; set +a; migrate -path ./migrations -database "$$DATABASE_URL" down 1
