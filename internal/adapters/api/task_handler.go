@@ -19,6 +19,7 @@ func (h *TaskHandler) RegisterRoutes(r *gin.Engine, auth gin.HandlerFunc) {
 	r.POST("/tasks", auth, h.CreateTask)
 	r.GET("/tasks", auth, h.FetchTasks)
 	r.PUT("/tasks/:id", auth, h.UpdateTask)
+	r.DELETE("/tasks/:id", auth, h.DeleteTask)
 }
 
 func (h *TaskHandler) CreateTask(c *gin.Context) {
@@ -86,4 +87,20 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, task)
+}
+
+func (h *TaskHandler) DeleteTask(c *gin.Context) {
+	id := c.Param("id")
+	userID := c.GetString("user_id")
+
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	if err := h.service.DeleteTask(id, userID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
 }

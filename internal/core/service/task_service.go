@@ -80,6 +80,19 @@ func (s *TaskServiceImpl) UpdateTask(taskID, userID, title, description, status 
 	return updatedTask, nil
 }
 
+func (s *TaskServiceImpl) DeleteTask(taskID, userID string) error {
+	taskId, err := uuid.Parse(taskID)
+	if err != nil {
+		return err
+	}
+
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+	return s.repo.DeleteTask(taskId, uid)
+}
+
 var ErrTitleRequired = &TaskError{"title is required"}
 
 type TaskError struct {

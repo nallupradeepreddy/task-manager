@@ -1,6 +1,9 @@
 package repository
 
 import (
+	"time"
+
+	"github.com/google/uuid"
 	"github.com/nallupradeepreddy/task-manager/internal/core/domain"
 	"gorm.io/gorm"
 )
@@ -19,7 +22,7 @@ func (r *TaskPostgresRepository) CreateTask(task *domain.Task) error {
 
 func (r *TaskPostgresRepository) FetchTasks(userID, status string) ([]*domain.Task, error) {
 	var tasks []*domain.Task
-	query := r.db.Where("user_id = ?", userID)
+	query := r.db.Where("user_id = ? AND deleted_at IS NULL", userID)
 	if status != "" {
 		query = query.Where("status = ?", status)
 	}
@@ -35,4 +38,10 @@ func (r *TaskPostgresRepository) UpdateTask(task *domain.Task) (*domain.Task, er
 	}
 
 	return task, nil
+}
+
+func (r *TaskPostgresRepository) DeleteTask(taskID, userID uuid.UUID) error {
+	return r.db.Model(&domain.Task{}).
+		Where("id = ? AND user_id = ?", taskID, userID).
+		Update("deleted_at", time.Now()).Error
 }
